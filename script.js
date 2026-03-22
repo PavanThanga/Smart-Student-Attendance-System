@@ -1,13 +1,11 @@
-// Students database
-let STUDENTS = []; // 
-
+let STUDENTS = []; 
 async function loadStudentsFromDB() {
   try {
     const res = await fetch("http://127.0.0.1:8000/students");
     const data = await res.json();
 
     if (data.success) {
-      STUDENTS = data.students; // 🔥 replace local array
+      STUDENTS = data.students; 
       renderStudentGrid(); 
     }
 
@@ -23,17 +21,14 @@ async function loadAttendanceFromDB() {
     const data = await res.json();
 
     if (data.success) {
-      ATTENDANCE = data.attendance; // 🔥 replace array
+      ATTENDANCE = data.attendance; 
     }
 
   } catch (err) {
     console.error("Failed to load attendance", err);
   }
 }
-let nextStuId = 9;
 
-// Timetable: one entry per period per day
-// Each entry: {id, day, periodNo, subject, teacher, startTime, endTime, class, room}
 let TIMETABLE = [];
 async function loadTimetableFromDB() {
   try {
@@ -61,13 +56,9 @@ async function loadDaySettings(){
     });
   }
 }
-let nextTTId = 20;
 
-/* ================================================================
-   HELPERS
-================================================================ */
+/*  HELPERS */
 function timeToMin(t){const[h,m]=t.split(":").map(Number);return h*60+m}
-function minToTime(m){return`${String(Math.floor(m/60)).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`}
 function nowMin(){const n=new Date();return n.getHours()*60+n.getMinutes()}
 function todayName(){return["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date().getDay()]}
 function todayStr(){return new Date().toISOString().split("T")[0]}
@@ -77,38 +68,20 @@ function fmtTimeMini(t){// "08:30" => "8:30 AM"
 }
 function fmtDateLong(d){return d.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
 
-function isSunday(dateStr){
-  const d = new Date(dateStr + "T00:00:00");
-  return d.getDay() === 0; // 0 = Sunday
-}
-function getValidPeriodsForDate(dateStr){
-  const d = new Date(dateStr + "T12:00:00");
-  const dayName = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][d.getDay()];
-
-  // ❌ Ignore Sunday
-  if(dayName === "Sunday") return [];
-
-  // ✅ Only periods with subject (NOT free)
-  return TIMETABLE.filter(t => 
-    t.day === dayName && 
-    t.subject && t.subject.trim() !== ""
-  );
-}
-/** Find what period is currently active / coming up */
 function getCurrentPeriod() {
   const now = new Date();
   const currentMin = now.getHours() * 60 + now.getMinutes();
 
   const today = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][now.getDay()];
 
-  // ❌ 1. Ignore Sunday completely
+  // Ignore Sunday 
   if (today === "Sunday") return null;
 
-  // 🔥 2. Filter ONLY valid periods (NOT free)
+  //  Filter ONLY valid periods
   const todayPeriods = TIMETABLE
     .filter(t =>
       t.day === today &&
-      t.subject && t.subject.trim() !== ""   // ❌ remove free periods
+      t.subject && t.subject.trim() !== ""  
     )
     .sort((a,b) => timeToMin(a.startTime) - timeToMin(b.startTime));
 
@@ -116,7 +89,7 @@ function getCurrentPeriod() {
     const start = timeToMin(p.startTime);
     const end = timeToMin(p.endTime);
 
-    // ✅ Active period
+    //  Active period
     if (currentMin >= start && currentMin <= end) {
       return {
         ...p,
@@ -125,7 +98,7 @@ function getCurrentPeriod() {
       };
     }
 
-    // ✅ Upcoming period
+    //  Upcoming period
     if (currentMin < start) {
       return {
         ...p,
@@ -135,24 +108,8 @@ function getCurrentPeriod() {
     }
   }
 
-  // ❌ No valid class
+  //  No valid class
   return null;
-}
-
-function openLoginFromDropdown() {
-  const role = document.getElementById("roleSelect").value;
-  openLoginModal(role);
-}
-
-/** Determine status from time captured vs period start */
-function getStatusFromTime(periodStartTime){
-  const sm=timeToMin(periodStartTime);
-  const nm=nowMin();
-  const diff=nm-sm;
-  if(diff<0) return "Before"; // too early
-  if(diff<=5) return "Present";
-  if(diff<=10) return "Late";
-  return "Absent";
 }
 
 function badgeHTML(s){
@@ -162,9 +119,7 @@ function badgeHTML(s){
 }
 function av(name){return`<div class="av">${name.charAt(0)}</div>`;}
 
-/* ================================================================
-   CLOCK
-================================================================ */
+/* CLOCK */
 function startClocks(){
   function tick(){
     const t=fmtTime(new Date());
@@ -176,10 +131,7 @@ function startClocks(){
   }
   tick();setInterval(tick,1000);
 }
-
-/* ================================================================
-   HOME BANNER
-================================================================ */
+/* HOME BANNER */
 function updateHomePeriodBanner(){
   const cp=getCurrentPeriod();
   const mainEl=document.getElementById("homePeriodMain");
@@ -196,10 +148,7 @@ function updateHomePeriodBanner(){
     subEl.textContent=`Starts at ${fmtTimeMini(cp.startTime)} · ${cp.teacher}`;
   }
 }
-
-/* ================================================================
-   NAVIGATION
-================================================================ */
+/* NAVIGATION */
 function showPage(id){
   document.querySelectorAll(".page").forEach(p=>{
     p.classList.remove("active");
@@ -214,16 +163,12 @@ function showPage(id){
 function goToMarkPage(){showPage("markPage");updatePeriodStrip();startClocks()}
 function leaveMark(){stopCamera();showPage("homePage")}
 
-/* ================================================================
-   LOGIN MODAL
-================================================================ */
+  /*LOGIN MODAL*/
 function openLoginModal() {
   const modal = document.getElementById("loginModal");
   const err = document.getElementById("loginErr");
-
   err.classList.add("hidden");
-
-  // ✅ CLEAR ALL FIELDS
+  //  CLEAR ALL FIELDS
     const userEl = document.getElementById("loginUser");
   const pwEl = document.getElementById("loginPw");
 
@@ -233,10 +178,8 @@ function openLoginModal() {
   if (userEl) userEl.value = "";
   if (pwEl) pwEl.value = "";
 
-  // Optional: reset role to default
   selectedRole = "admin";
 
-  // Update UI based on role
   updateLoginRoleUI();
 
   modal.style.display = "flex";
@@ -244,11 +187,10 @@ function openLoginModal() {
 }
 
 function updateLoginRoleUI(role=selectedRole) {
-
   const badge = document.getElementById("modalRoleBadge");
   const title = document.getElementById("modalTitle");
 
- // 👉 CLEAR fields every time role changes
+ //  CLEAR fields every time role changes
   document.getElementById("loginUser").value = "";
   document.getElementById("loginPw").value = "";
 
@@ -337,7 +279,7 @@ function togglePw(){
 }
 function resetAdminUI(){
 
-  // ✅ Reset sections (go to dashboard)
+  //  Reset sections (go to dashboard)
   document.querySelectorAll("#adminPage .sec").forEach(s=>{
     s.classList.remove("active");
     s.classList.add("hidden");
@@ -349,21 +291,21 @@ function resetAdminUI(){
     dash.classList.add("active");
   }
 
-  // ✅ Reset sidebar active state
+  //  Reset sidebar active state
   document.querySelectorAll("#adminSidebar .nav-a").forEach(a=>{
     a.classList.remove("active");
   });
 
   document.querySelector("#adminSidebar .nav-a")?.classList.add("active");
 
-  // ✅ Clear register form
+  //  Clear register form
   clearRegForm();
 
-  // ✅ Reset preview
+  //  Reset preview
   const preview = document.getElementById("regPhotoPreview");
   if(preview) preview.classList.add("hidden");
 
-  // ✅ Reset captured image
+  //  Reset captured image
   const img = document.getElementById("regCapturedImg");
   if(img) img.src = "";
 
@@ -377,9 +319,7 @@ function logout(role){
   showToast("Logged out successfully","info");
 }
 
-/* ================================================================
-   SIDEBAR TOGGLE
-================================================================ */
+  /* SIDEBAR TOGGLE*/
 function toggleSB(role){
   const sb=document.getElementById(role+"Sidebar");
   const ov=document.getElementById(role+"Overlay");
@@ -387,10 +327,7 @@ function toggleSB(role){
   if(open){sb.classList.remove("open");ov.classList.add("hidden");ov.classList.remove("vis")}
   else{sb.classList.add("open");ov.classList.remove("hidden");ov.classList.add("vis")}
 }
-
-/* ================================================================
-   ADMIN NAVIGATION
-================================================================ */
+/*   ADMIN NAVIGATION*/
 function adminNav(sec,el){
   document.querySelectorAll("#adminSidebar .nav-a").forEach(a=>a.classList.remove("active"));
   if(el)el.classList.add("active");
@@ -413,9 +350,7 @@ async function initAdmin(){
   renderTodayPeriodStatus("adm");
 }
 
-/* ================================================================
-   TEACHER NAVIGATION
-================================================================ */
+/*   TEACHER NAVIGATION*/
 function teacherNav(sec,el){
   document.querySelectorAll("#teacherSidebar .nav-a").forEach(a=>a.classList.remove("active"));
   if(el)el.classList.add("active");
@@ -426,7 +361,6 @@ function teacherNav(sec,el){
   if(sec==="tstudents"){renderTeaStudentGrid();}
   if(sec==="tperiodview"){populatePVFilters();renderPeriodView();}
   if(sec==="tsummary"){
-    console.log("Rendering summary...");
     renderAdminSummary("tea");
   }
   if(sec==="tdashboard"){
@@ -454,9 +388,7 @@ function initTeacherDash(){
     renderTodayPeriodStatus("tea");
 }
 
-/* ================================================================
-   REGISTER STUDENT
-================================================================ */
+/*   REGISTER STUDENT*/
 let regStream = null;
 let regCapturedBlob = null;
 
@@ -470,7 +402,7 @@ async function registerStudent() {
     return;
   }
 
-  // 🔥 IMPORTANT: Check if photo captured
+  //  IMPORTANT: Check if photo captured
   if (!regCapturedBlob) {
     showToast("Please capture photo first", "error");
     return;
@@ -483,14 +415,14 @@ async function registerStudent() {
     formData.append("roll", roll);
     formData.append("student_class", cls);
 
-    // extra fields (optional)
+    // extra fields 
     formData.append("phone", document.getElementById("regPhone").value);
     formData.append("dob", document.getElementById("regDob").value);
     formData.append("parent", document.getElementById("regParent").value);
     formData.append("parent_phone",document.getElementById("regParentPh").value);
     formData.append("address", document.getElementById("regAddr").value);
 
-    // 🔥 attach captured image
+    //  attach captured image
     formData.append("file", regCapturedBlob, "face.jpg");
 
     const res = await fetch("http://127.0.0.1:8000/register", {
@@ -501,7 +433,7 @@ async function registerStudent() {
     const data = await res.json();
 
     if (data.success) {
-      showToast("Student registered successfully ✅", "success");
+      showToast("Student registered successfully ", "success");
       await loadStudentsFromDB();
       document.getElementById("admTotalStu").textContent=STUDENTS.length;
       clearRegForm();
@@ -526,10 +458,7 @@ function clearRegForm(){
     regCapturedBlob = null;
     document.getElementById("regPhotoPreview").classList.add("hidden");
 }
-
-/* ================================================================
-   REGISTER STUDENT — CAMERA
-================================================================ */
+/*   REGISTER STUDENT — CAMERA*/
 async function startRegCamera() {
   const video = document.getElementById("regCamVideo");
 
@@ -544,7 +473,7 @@ async function startRegCamera() {
     document.getElementById("regStopBtn").classList.remove("hidden");
     document.getElementById("regCaptureBtn").classList.remove("hidden");
 
-    showToast("Register camera started 🎥", "success");
+    showToast("Register camera started ", "success");
 
   } catch (e) {
     console.error(e);
@@ -566,7 +495,7 @@ function captureRegPhoto() {
   const canvas = document.getElementById("regCamCanvas");
   const container = document.getElementById("regCamFrame");
 
-  // 👉 use container size (what user sees)
+  //  use container size (what user sees)
   const cw = container.offsetWidth;
   const ch = container.offsetHeight;
 
@@ -575,7 +504,7 @@ function captureRegPhoto() {
 
   const ctx = canvas.getContext("2d");
 
-  // 👉 calculate crop (same as object-fit: cover)
+  //  calculate crop (same as object-fit: cover)
   const videoRatio = video.videoWidth / video.videoHeight;
   const containerRatio = cw / ch;
 
@@ -595,7 +524,7 @@ function captureRegPhoto() {
     sy = (video.videoHeight - sh) / 2;
   }
 
-  // 👉 draw ONLY visible part
+  //  draw ONLY visible part
   ctx.drawImage(video, sx, sy, sw, sh, 0, 0, cw, ch);
 
   canvas.toBlob(blob => {
@@ -606,7 +535,7 @@ function captureRegPhoto() {
 
     document.getElementById("regPhotoPreview").classList.remove("hidden");
 
-    showToast("Perfect frame captured ✅", "success");
+    showToast("Perfect frame captured ", "success");
   }, "image/jpeg");
 }
 
@@ -617,12 +546,7 @@ function retakeRegPhoto() {
 
   showToast("Retake photo", "info");
 }
-
-
-
-/* ================================================================
-   STUDENT GRID
-================================================================ */
+/*   STUDENT GRID*/
 function renderStudentGrid(){
   const q=(document.getElementById("stuSearch")?.value||"").toLowerCase();
   const filtered=STUDENTS.filter(s=>
@@ -656,7 +580,6 @@ function handleStuClick(btn){
 }
 function showStuDetail(roll){
   const s = STUDENTS.find(x => x.roll === roll);
-  console.log(s);
   if (!s) return;
   currentStudentRoll = roll;
 
@@ -787,7 +710,7 @@ async function removeStu(roll){
     if(data.success){
       showToast(`${s.name} deleted`, "success");
 
-      // 🔥 refresh data
+      // refresh data
       await loadStudentsFromDB();
       await loadAttendanceFromDB();
 
@@ -802,9 +725,7 @@ async function removeStu(roll){
     showToast("Server error", "error");
   }
 }
-/* ================================================================
-   TIMETABLE — Fixed time grid
-================================================================ */
+/*   TIMETABLE — Fixed time grid*/
 const TT_DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const TT_PERIODS = [
   {n:1, s:"08:15", e:"09:05"},
@@ -944,7 +865,7 @@ async function saveTimetable() {
       body: JSON.stringify(TIMETABLE)
     });
 
-    showToast("Timetable saved to DB ✅", "success");
+    showToast("Timetable saved to DB", "success");
 
   } catch (e) {
     console.error(e);
@@ -983,14 +904,14 @@ function syncTTFromBackend() {
 
 function renderTodayPeriodStatus(prefix="adm"){
   const day    = todayName();
-  const todayS = todayStr(); // ✅ defined properly
+  const todayS = todayStr(); //  
   const nm     = nowMin();
 
   const id = prefix === "adm" ? "todayPeriodStatus" : "teaTodayPeriodStatus";
   const el = document.getElementById(id);
   if(!el) return;
 
-    // ✅ Disabled day check — using todayS not today
+    //  Disabled day check 
   const setting = DAY_SETTINGS[todayS];
   if(setting && setting.active === false){
     el.innerHTML = `
@@ -1001,7 +922,7 @@ function renderTodayPeriodStatus(prefix="adm"){
     return;
   }
 
-  // ✅ Sunday check
+  //  Sunday check
   if(day === "Sunday"){
     el.innerHTML = `
       <div style="text-align:center;padding:12px;color:var(--muted)">
@@ -1010,7 +931,7 @@ function renderTodayPeriodStatus(prefix="adm"){
     return;
   }
 
-  // ✅ No timetable
+  //  No timetable
   const periods = TIMETABLE
     .filter(t => t.day === day && t.subject)
     .sort((a,b) => timeToMin(a.startTime) - timeToMin(b.startTime));
@@ -1116,7 +1037,7 @@ function renderAdminSummary(prefix="adm"){
   const body = document.getElementById(prefix + "SummaryBody");
   if(!body ||  !head) return;
 
-  renderSubjectHeader(prefix); // 🔥 important
+  renderSubjectHeader(prefix); 
 
   const subjects = getSubjects();
   body.innerHTML = STUDENTS.filter(s =>s.class==="AIML-A").map(s => {
@@ -1171,7 +1092,7 @@ function renderAdminSummary(prefix="adm"){
 }
 function calculateGlobalTotalPeriods(){
 
-  const startDate = new Date("2026-03-21"); // 🔥 set your system start date
+  const startDate = new Date("2026-03-21"); // 
   const today = new Date();
 
   let total = 0;
@@ -1180,10 +1101,10 @@ function calculateGlobalTotalPeriods(){
 
     const dayName = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][d.getDay()];
 
-    // ❌ Skip Sunday
+    //  Skip Sunday
     if(dayName === "Sunday") continue;
 
-    // ✅ Count only valid periods (NOT free)
+    //  Count only valid periods (NOT free)
     const validPeriods = TIMETABLE.filter(t =>
       t.day === dayName &&
       t.subject && t.subject.trim() !== ""
@@ -1240,7 +1161,7 @@ function renderSubjectHeader(prefix){
       <th>Roll</th>
       <th>Class</th>
       ${subjects.map(sub =>{
-        const total = getSubjectTotalTillToday(sub);  // 🔥 count
+        const total = getSubjectTotalTillToday(sub);  
         return `<th>${sub} (${total})</th>`;
       }).join("")}
       <th>%</th>
@@ -1256,10 +1177,6 @@ function getStartDate(){
   const dates = ATTENDANCE.map(r => new Date(r.date));
   return new Date(Math.min(...dates));
 }
-function isDisabledDay(dateStr){
-  // temporary simple check (we’ll improve later)
-  return DISABLED_DAYS.includes(dateStr);
-}
 function getSubjectTotalTillToday(subject){
 
   let total = 0;
@@ -1270,12 +1187,12 @@ function getSubjectTotalTillToday(subject){
     const dateStr = d.toISOString().split("T")[0];
     const dayName = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][d.getDay()];
 
-    // ❌ skip Sunday
+    //  skip Sunday
     if(dayName === "Sunday") continue;
 
     const setting = DAY_SETTINGS[dateStr];
 
-    // ❌ skip fully disabled day
+    //  skip fully disabled day
     if(setting && setting.active === false) continue;
 
     TIMETABLE.forEach(p => {
@@ -1289,24 +1206,24 @@ function getSubjectTotalTillToday(subject){
         const periodEnd = timeToMin(p.endTime);
         const periodStart = timeToMin(p.startTime);
 
-        // 🟢 past day → count fully
+        //  past day → count fully
         if(dateStr < now.toISOString().split("T")[0]){
           total++;
         }
 
-        // 🟡 today → only completed periods
+        //  today → only completed periods
         else if(dateStr === now.toISOString().split("T")[0]){
 
           const currentMin = now.getHours()*60 + now.getMinutes();
 
-          // ❌ not completed
+          //  not completed
           if(currentMin < periodEnd) return;
 
-          // 🔥 check enable time
+          //  check enable time
           if(setting && setting.enabled_at){
             const enabledMin = timeToMin(setting.enabled_at);
 
-            // ❌ skip periods before enabling
+            //  skip periods before enabling
             if(periodStart < enabledMin) return;
           }
 
@@ -1325,10 +1242,10 @@ function calculateSubjectWise(student){
 
   subjects.forEach(sub => {
 
-    // 👉 total classes for this subject
+    //  total classes for this subject
     const total = getSubjectTotalTillToday(sub);
 
-    // 👉 present count
+    //  present count
     const present = ATTENDANCE.filter(r =>
       r.roll === student.roll &&
       r.subject === sub &&
@@ -1399,32 +1316,6 @@ function exportAdminCSV(){
   showToast("Attedance exported!", "success");
 }
 /* ================================================================
-   TEACHER PERIOD SUMMARY
-================================================================ */
-function renderTeacherPeriodSummary(){
-  const day=todayName();
-  const periods=TIMETABLE.filter(t=>t.day===day).sort((a,b)=>timeToMin(a.startTime)-timeToMin(b.startTime));
-  const body=document.getElementById("teaPeriodSummary");
-  if(!body)return;
-  if(!periods.length){body.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">No classes today</td></tr>`;return}
-  body.innerHTML=periods.map(p=>{
-    const recs=ATTENDANCE.filter(r=>r.date===todayStr()&&r.periodNo===p.periodNo&&r.subject===p.subject);
-    const present=recs.filter(r=>r.status==="Present").length;
-    const late=recs.filter(r=>r.status==="Late").length;
-    const absent=STUDENTS.length-present-late;
-    return`<tr>
-      <td>${p.periodNo}</td>
-      <td><b>${p.subject}</b></td>
-      <td style="font-family:'DM Mono',monospace;font-size:0.8rem">${fmtTimeMini(p.startTime)}–${fmtTimeMini(p.endTime)}</td>
-      <td style="color:var(--green);font-weight:700">${present}</td>
-      <td style="color:var(--orange);font-weight:700">${late}</td>
-      <td style="color:var(--red);font-weight:700">${Math.max(0,absent)}</td>
-      <td><button class="btn-sm" onclick="teacherNav('tperiodview',document.querySelectorAll('#teacherSidebar .nav-a')[2]);document.getElementById('pvPeriod').value='${p.periodNo}-${p.subject}';renderPeriodView()">View <i class="fa-solid fa-arrow-right"></i></button></td>
-    </tr>`;
-  }).join("");
-}
-/*Teacher-students*/
-/* ================================================================
    TEACHER — STUDENT GRID
 ================================================================ */
 function renderTeaStudentGrid() {
@@ -1456,11 +1347,8 @@ function renderTeaStudentGrid() {
       `).join("");
 }
 
-/* ================================================================
-   TEACHER — STUDENT DETAIL POPUP
-================================================================ */
+/* TEACHER — STUDENT DETAIL POPUP */
 function showTeaStuDetail(roll) {
-  console.log("Hello");
   const s = STUDENTS.find(x => x.roll === roll);
   if (!s) return;
 
@@ -1493,8 +1381,8 @@ function showTeaStuDetail(roll) {
 
   // Show popup
     const popup = document.getElementById("teaStuPopupWrap");
-    popup.classList.remove("hidden");  // remove hidden first
-    popup.classList.add("open");       // then add open (your CSS uses .open for display:flex)
+    popup.classList.remove("hidden");  
+    popup.classList.add("open");       
 }
 
 function closeTeaStuPopup(e) {
@@ -1509,7 +1397,7 @@ function renderTeaStuAnalytics(s) {
   const el = document.getElementById("teaStuAnalytics");
   if (!el) return;
 
-  // ✅ Use exact same logic as reports
+  //  Use exact same logic as reports
   const subjStats = calculateSubjectWise(s);
   const subjects  = getSubjects();
 
@@ -1584,9 +1472,7 @@ function renderTeaStuAnalytics(s) {
   `;
 }
 
-/* ================================================================
-   ADMIN REPORT FILTERS
-================================================================ */
+/*   ADMIN REPORT FILTERS*/
 function populateARFilters(){
   const sel=document.getElementById("arPeriod");if(!sel)return;
   const periods=[...new Set(TIMETABLE.map(t=>`${t.periodNo}-${t.subject}`))].sort();
@@ -1627,7 +1513,7 @@ function renderARTable(){
       <td>${r.markedTime}</td>
       <td>${badgeHTML(r.status)}</td>
 
-      <!-- 🔥 NEW COLUMNS -->
+      <!--  NEW COLUMNS -->
       <td>${stats.total}</td>
       <td style="color:var(--green)">${stats.present}</td>
       <td style="color:var(--red)">${stats.absent}</td>
@@ -1643,9 +1529,7 @@ function resetAdminReport(){
   showToast("Filters reset","info");
 }
 
-/* ================================================================
-   TEACHER RECORD FILTERS
-================================================================ */
+/* TEACHER RECORD FILTERS */
 function populateTRFilters(){
   const pSel=document.getElementById("trPeriod");
   const sSel=document.getElementById("trSubject");
@@ -1693,9 +1577,7 @@ function resetTeacherRecords(){
   trFiltered=[...ATTENDANCE];trPage=1;renderTRTable();showToast("Filters reset","info");
 }
 
-/* ================================================================
-   PERIOD-WISE VIEW (Teacher)
-================================================================ */
+/* PERIOD-WISE VIEW (Teacher) */
 function populatePVFilters(){
   const sSel = document.getElementById("pvSubject");
   if(!sSel) return;
@@ -1862,12 +1744,7 @@ function noResultCard(msg){
       <div style="font-weight:600;color:var(--text);margin-bottom:4px">${msg}</div>
     </div>`;
 }
-
-
-
-/* ================================================================
-   PAGINATION
-================================================================ */
+/* PAGINATION */
 function renderPag(id,cur,total,cb){
   const el=document.getElementById(id);if(!el)return;
   if(total<=1){el.innerHTML="";return}
@@ -1877,9 +1754,7 @@ function renderPag(id,cur,total,cb){
   el.innerHTML=h;
 }
 
-/* ================================================================
-   EXPORT CSV
-================================================================ */
+/* EXPORT CSV */
 function exportCSV(role){
   const data=role==="admin"?arFiltered:trFiltered;
   const header=["Name","Roll","Class","Date","Period","Subject","Marked Time","Status"];
@@ -1891,9 +1766,7 @@ function exportCSV(role){
   showToast("CSV exported!","success");
 }
 
-/* ================================================================
-   MARK ATTENDANCE — Period Strip
-================================================================ */
+/* MARK ATTENDANCE — Period Strip*/
 function updatePeriodStrip(){
   const cp=getCurrentPeriod();
   const stripPeriod=document.getElementById("stripPeriod");
@@ -1924,9 +1797,7 @@ function updatePeriodStrip(){
   }
 }
 
-/* ================================================================
-   CAMERA
-================================================================ */
+/* CAMERA */
 let camStream = null;
 
 async function startCamera() {
@@ -1939,7 +1810,6 @@ async function startCamera() {
   }
 
   try {
-    // 🔥 FIX: stop previous stream if exists
     if (camStream) {
       camStream.getTracks().forEach(track => track.stop());
     }
@@ -2028,8 +1898,6 @@ function setCamStatus(state){
 /* ================================================================
    CAPTURE & RECOGNIZE
 ================================================================ */
-let sessionMarked=[];
-
 async function captureAndRecognize() {
   const video = document.getElementById("camVideo");
   const canvas = document.getElementById("camCanvas");
@@ -2057,17 +1925,16 @@ async function captureAndRecognize() {
 
       const data = await res.json();
 
-      // ❌ If not recognized
+      //  If not recognized
       if (!data.success) {
 
-          // 🔥 HANDLE DISABLED DAY / HOLIDAY
+          //  HANDLE DISABLED DAY / HOLIDAY
           if (data.reason === "disabled_day" || data.reason === "holiday") {
             showToast(data.message, "info");
             showResState("wait");   // don't show error UI
             return;
           }
 
-          // ❌ ACTUAL ERROR (face not recognized)
           showResState("err");
           document.getElementById("errMsg").textContent =
             data.message || "Face Not Recognized";
@@ -2078,7 +1945,6 @@ async function captureAndRecognize() {
           return;
       }
       await loadAttendanceFromDB();
-      // ✅ If recognized
       const s = data;
 
       const timeStr = new Date().toLocaleTimeString();
@@ -2092,8 +1958,6 @@ async function captureAndRecognize() {
 
       const badge = document.getElementById("resStatusBadge");
 
-      // 🔥 HANDLE STATUS PROPERLY
-      // 🔥 HANDLE STATUS PROPERLY
     if (data.status === "marked") {
 
       if (data.attendance_status === "Present") {
@@ -2159,10 +2023,7 @@ function showResState(state){
   });
 }
 
-
-/* ================================================================
-   TOAST
-================================================================ */
+/* TOAST */
 function showToast(msg,type="info"){
   const t=document.getElementById("toast");
   const icons={success:"fa-solid fa-circle-check",error:"fa-solid fa-circle-xmark",info:"fa-solid fa-circle-info"};
@@ -2173,9 +2034,7 @@ function showToast(msg,type="info"){
   t._t=setTimeout(()=>t.classList.remove("vis"),3200);
 }
 
-/* ================================================================
-   INIT
-================================================================ */
+/* INIT */
 document.addEventListener("DOMContentLoaded",async()=>{
   await loadStudentsFromDB();
   await loadAttendanceFromDB();
