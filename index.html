@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>noProxy</title>
+<link rel="stylesheet" href="fontawesome/css/all.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="bg-gradient"></div>
+        <div class="floating-shapes">
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+    </div>
+<!--HOME PAGE-->
+<div id="homePage" class="page active">
+  <div class="home-mesh"></div>
+  <div class="home-orb"></div>
+  <div class="home-orb"></div>
+  <div class="home-orb"></div>
+
+  <!-- Corner login buttons -->
+  <div class="corner-logins">
+    <button class="corner-btn corner-btn-teacher" onclick="openLoginModal()">
+        <i class="fa-solid fa-right-to-bracket"></i> Login
+    </button>
+  </div>
+
+  <!-- Hero -->
+  <div class="home-content">
+    <div class="home-logo">
+        <div class="home-logo-inner">
+            <img src="logo1.png" alt="logo">
+            <div class="home-logo-scan"></div>
+        </div>
+    </div>
+  </div>
+    <h1 class="home-title">noProxy</h1>
+    <p class="home-subtitle">Welcome to Smart Facial Recognition Attendance System</p>
+
+    <div class="home-action-card">
+      <!-- Current period indicator -->
+      <div class="current-period-banner" id="homePeriodBanner">
+        <span class="cpb-dot"></span>
+        <div class="cpb-text">
+          <div class="cpb-main" id="homePeriodMain">Detecting current period...</div>
+          <div class="cpb-sub" id="homePeriodSub">Checking timetable</div>
+        </div>
+      </div>
+
+      <button class="btn-mark-attend" onclick="goToMarkPage()">
+        <i class="fa-solid fa-camera"></i>
+        Mark My Attendance
+      </button>
+    </div>
+    <p class="bottom-text">
+    © 2026 PavanThanga.
+  </p>
+  </div>
+</div>
+
+<!-- ================================================================
+     LOGIN MODAL
+================================================================ -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2 id="modalTitle">Login</h2>
+      <button class="modal-close" onclick="closeLoginModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="modalRoleBadge" class="modal-role-badge badge-admin">
+      <i class="fa-solid fa-shield-halved"></i> Admin
+    </div>
+    <div>
+        <label class="form-label">Login As</label>
+        <div class="role-selector">
+            <button class="role-btn active" id="roleAdmin" onclick="selectRole('admin')">
+                <i class="fa-solid fa-shield-halved"></i> Admin
+            </button>
+
+            <button class="role-btn" id="roleTeacher" onclick="selectRole('teacher')">
+                <i class="fa-solid fa-chalkboard-user"></i> Faculty
+            </button>
+        </div>
+    </div>
+    <div>
+      <label class="form-label">User ID</label>
+      <div class="input-wrap">
+        <i class="fa-regular fa-user input-icon"></i>
+        <input class="inp" type="text" id="loginUser" placeholder="Enter your user ID">
+      </div>
+    </div>
+    <div>
+      <label class="form-label">Password</label>
+      <div class="input-wrap">
+        <i class="fa-solid fa-lock input-icon"></i>
+        <input class="inp" type="password" id="loginPw" placeholder="••••••••">
+        <button class="toggle-eye" onclick="togglePw()"><i id="eyeIco" class="fa-regular fa-eye"></i></button>
+      </div>
+    </div>
+    <button class="btn-submit" onclick="handleLogin()">
+      <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
+    </button>
+    <div class="login-err hidden" id="loginErr">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span id="loginErrMsg">Invalid credentials</span>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     MARK ATTENDANCE PAGE
+================================================================ -->
+<div id="markPage" class="page">
+  <div class="home-mesh" style="position:absolute;inset:0;z-index:0"></div>
+
+  <!-- Topbar -->
+  <div class="mark-topbar">
+    <div class="mark-topbar-brand">
+      <div class="m-logo"><img src="logo2.png" alt="logo"></div>
+      noProxy
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-family:'Consolas',monospace;color:rgba(255,255,255,0.4);font-size:0.82rem" id="markClock">--:--:--</div>
+      <button class="mark-back" onclick="leaveMark()">
+        <i class="fa-solid fa-arrow-left"></i> Back to Home
+      </button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="mark-body">
+    <!-- Left: Camera + Period info -->
+    <div class="cam-col">
+      <!-- Period strip -->
+      <div class="period-strip" id="periodStrip">
+        <div class="ps-item">
+          <div class="ps-lbl">Period</div>
+          <div class="ps-val" id="stripPeriod">—</div>
+        </div>
+        <div class="ps-sep"></div>
+        <div class="ps-item">
+          <div class="ps-lbl">Subject</div>
+          <div class="ps-val" id="stripSubject">—</div>
+        </div>
+        <div class="ps-sep"></div>
+        <div class="ps-item">
+          <div class="ps-lbl">Faculty</div>
+          <div class="ps-val" id="stripTeacher">—</div>
+        </div>
+        <div class="ps-sep"></div>
+        <div class="ps-item">
+          <div class="ps-lbl">Timing</div>
+          <div class="ps-val" id="stripTiming">—</div>
+        </div>
+        <div class="ps-status-chip ps-off" id="stripStatus">
+          <i class="fa-regular fa-clock"></i> No Active Period
+        </div>
+      </div>
+
+      <!-- Camera card -->
+      <div class="cam-card">
+        <div class="card-hd">
+          <h3><i class="fa-solid fa-camera"></i> Camera Feed</h3>
+          <div class="ps-status-chip ps-off" id="camStatusChip" style="padding:4px 11px;font-size:0.7rem">
+            <span id="camDot" style="width:7px;height:7px;border-radius:50%;background:#94A3B8;display:inline-block"></span>
+            &nbsp;Off
+          </div>
+        </div>
+        <div class="camera-container">
+            <video id="camVideo" autoplay></video>
+            <canvas id="camCanvas"></canvas>
+
+            <div class="camera-overlay">
+                <div class="face-frame">
+                <div class="corner tl"></div>
+                <div class="corner tr"></div>
+                <div class="corner bl"></div>
+                <div class="corner br"></div>
+                <div class="scan-line"></div>
+                </div>
+            </div>
+        </div>
+        <div class="cam-ctrls">
+          <button class="btn-start" id="startBtn" onclick="startCamera()">
+            <i class="fa-solid fa-play"></i> Start Camera
+          </button>
+          <button class="btn-stop hidden" id="stopBtn" onclick="stopCamera()">
+            <i class="fa-solid fa-stop"></i> Stop
+          </button>
+          <button class="btn-capture-main hidden" id="captureBtn" onclick="captureAndRecognize()">
+            <i class="fa-solid fa-circle-dot"></i> Capture & Recognize
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Result + Marked list -->
+    <div class="res-col">
+      <div class="res-card">
+        <div class="card-hd">
+          <h3><i class="fa-solid fa-id-badge"></i> Recognition Result</h3>
+        </div>
+        <!-- Waiting -->
+        <div class="res-body" id="resWait">
+          <div class="res-wait-ico"><i class="fa-solid fa-face-smile"></i></div>
+          <p>Awaiting face detection...</p>
+          <p style="font-size:0.75rem;color:rgba(255,255,255,0.25);margin-top:6px">Position face in camera frame</p>
+        </div>
+        <!-- Processing -->
+        <div class="res-body res-proc hidden" id="resProc">
+          <div class="spin spin-sm" style="margin-bottom:12px"></div>
+          <p>Recognizing face...</p>
+        </div>
+        <!-- Success -->
+        <div class="res-body hidden" id="resSuc">
+          <div class="res-suc-ico"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="res-name" id="resName">—</div>
+          <div class="res-roll" id="resRoll">—</div>
+          <div class="res-time" id="resTime">—</div>
+          <div class="res-period-info">
+            <div class="rpi-sub">Marked for</div>
+            <div class="rpi-val" id="resPeriodInfo">—</div>
+          </div>
+          <div id="resStatusBadge"></div>
+        </div>
+        <!-- Error -->
+        <div class="res-body hidden" id="resErr">
+          <div class="res-err-ico"><i class="fa-solid fa-circle-xmark"></i></div>
+          <div class="res-err">
+            <h3 id="errMsg">Not Recognized</h3>
+            <p>Student may not be registered</p>
+          </div>
+        </div>
+      </div>
+
+      </div>
+    </div>
+    <p style="margin-top: auto;
+  margin-bottom: 20px;
+  font-family: 'Times New Roman', Times, serif;color: rgba(232, 232, 238, 1);text-align: center;">
+    © 2026 PavanThanga.
+  </p>
+  </div>
+</div>
+
+<!-- ================================================================
+     ADMIN PAGE
+================================================================ -->
+<div id="adminPage" class="page">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="adminSidebar">
+    <div class="sb-brand">
+      <div class="m-logo"><img src="logo2.png" alt="logo"></div>      <span class="sb-name">noProxy</span>
+      <span class="sb-role-chip chip-admin">Admin</span>
+    </div>
+    <p class="nav-lbl">Overview</p>
+    <a href="#" class="nav-a active" onclick="adminNav('dashboard',this)">
+      <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
+    </a>
+    <p class="nav-lbl">Students</p>
+    <a href="#" class="nav-a" onclick="adminNav('register',this)">
+      <i class="fa-solid fa-user-plus"></i><span>Register Student</span>
+    </a>
+    <a href="#" class="nav-a" onclick="adminNav('students',this)">
+      <i class="fa-solid fa-users"></i><span>All Students</span>
+    </a>
+    <p class="nav-lbl">Schedule</p>
+    <a href="#" class="nav-a" onclick="adminNav('timetable',this)">
+      <i class="fa-solid fa-calendar-days"></i><span>Timetable</span>
+    </a>
+    <p class="nav-lbl">Reports</p>
+    <a href="#" class="nav-a" onclick="adminNav('areports',this)">
+      <i class="fa-solid fa-chart-bar"></i><span>Attendance Report</span>
+    </a>
+    <div class="sb-footer">
+      <div class="sb-user">
+        <div class="sb-avatar"><i class="fa-solid fa-user"></i></div>
+        <div>
+          <div class="sb-uname">Administrator</div>
+          <div class="sb-urole">admin</div>
+        </div>
+        <button class="btn-logout" onclick="logout('admin')" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
+      </div>
+    </div>
+  </aside>
+  <header class="topbar">
+    <button class="menu-btn" onclick="toggleSB('admin')"><i class="fa-solid fa-bars"></i></button>
+    <span class="topbar-title">noProxy</span>
+    <span class="topbar-clock" id="adminClock">--:--:--</span>
+    <button class="topbar-logout" onclick="logout('admin')"><i class="fa-solid fa-right-from-bracket"></i></button>
+  </header>
+  <div class="sb-overlay hidden" id="adminOverlay" onclick="toggleSB('admin')"></div>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Dashboard -->
+    <section class="sec active" id="adm-dashboard">
+      <div class="sec-hd">
+        <div>
+          <h2 class="sec-title">Admin Dashboard</h2>
+          <p class="sec-sub" id="adminDate">—</p>
+        </div>
+
+        <!-- 🔥 ADD THIS WRAPPER -->
+        <div class="sec-hd-right">
+
+          <div style="font-family:'Consolas',monospace;font-size:0.9rem;color:var(--muted);background:var(--card);padding:9px 25px;border-radius:9px;border:1px solid var(--border)">
+            <i class="fa-regular fa-clock"></i>
+            <span id="adminClockD">--:--:--</span>
+          </div>
+
+          <button id="toggleDayBtn" onclick="toggleDay()" class="btn-secondary">
+            Toggle Attendance
+          </button>
+
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card sc-blue" style="animation-delay:0s">
+          <div class="stat-ico"><i class="fa-solid fa-users"></i></div>
+          <div>
+            <div class="stat-lbl">Total Students</div>
+            <div class="stat-val" id="admTotalStu">0</div>
+            <div class="stat-ch ch-up"><i class="fa-solid fa-arrow-trend-up"></i> Registered</div>
+          </div>
+        </div>
+        
+        <div class="stat-card sc-orange" style="animation-delay:0.12s">
+          <div class="stat-ico"><i class="fa-solid fa-clock"></i></div>
+          <div>
+            <div class="stat-lbl">Periods Today</div>
+            <div class="stat-val" id="admPeriods">0</div>
+            <div class="stat-ch ch-nt"><i class="fa-solid fa-calendar"></i> In timetable</div>
+          </div>
+        </div>
+        
+      </div>
+
+      <!-- Today's period status -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd"><h3><i class="fa-solid fa-calendar-check"></i> Today's Period Status</h3></div>
+        <div class="card-body" id="todayPeriodStatus">
+          <!-- populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Register Student -->
+    <section class="sec hidden" id="adm-register">
+      <div class="sec-hd">
+        <div>
+          <h2 class="sec-title">Register New Student</h2>
+          <p class="sec-sub">Add a new student with face capture</p>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+
+        <!-- LEFT: Form -->
+        <div class="card">
+          <div class="card-hd"><h3><i class="fa-solid fa-user-plus"></i> Student Details</h3></div>
+          <div class="reg-form-grid">
+            <div class="form-group">
+              <label>Full Name *</label>
+              <input class="form-input" id="regName" placeholder="e.g. Thanga Venkata Pavan">
+            </div>
+            <div class="form-group">
+              <label>Roll Number *</label>
+              <input class="form-input" id="regRoll" placeholder="e.g. 231FA18358">
+            </div>
+            <div class="form-group">
+              <label>Class / Section *</label>
+              <select class="form-input" id="regClass">
+                <option value="">Select class</option>
+                <option>AIML-A</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Date of Birth</label>
+              <input class="form-input" id="regDob" type="date">
+            </div>
+            <div class="form-group">
+              <label>Phone</label>
+              <input class="form-input" id="regPhone" placeholder="+91 9876543210">
+            </div>
+            <div class="form-group">
+              <label>Parent / Guardian Name</label>
+              <input class="form-input" id="regParent" placeholder="Parent / Guardian name">
+            </div>
+            <div class="form-group">
+              <label>Parent / Guardian Phone</label>
+              <input class="form-input" id="regParentPh" placeholder="+91 9876543210">
+            </div>
+            <div class="form-group full">
+              <label>Address</label>
+              <input class="form-input" id="regAddr" placeholder="Bapatla">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn-secondary" onclick="clearRegForm()"><i class="fa-solid fa-rotate-left"></i> Clear</button>
+            <button class="btn-primary" onclick="registerStudent()"><i class="fa-solid fa-user-plus"></i> Register Student</button>
+          </div>
+        </div>
+
+        <!-- RIGHT: Camera -->
+        <div class="cam-card">
+          <div class="card-hd">
+            <h3><i class="fa-solid fa-camera"></i> Capture Face</h3>
+            <div class="ps-status-chip ps-off" id="regCamStatusChip" style="padding:4px 11px;font-size:0.7rem">
+              <span id="regCamDot" style="width:7px;height:7px;border-radius:50%;background:#94A3B8;display:inline-block"></span>
+              &nbsp;Off
+            </div>
+          </div>
+
+          <div class="camera-container" id="regCamFrame">
+            <video id="regCamVideo" autoplay playsinline muted></video>
+            <div class="camera-overlay">
+              <div class="face-frame">
+                <div class="corner tl"></div>
+                <div class="corner tr"></div>
+                <div class="corner bl"></div>
+                <div class="corner br"></div>
+                <div class="scan-line"></div>
+              </div>
+            </div>
+          </div>
+          <canvas id="regCamCanvas"></canvas>
+          <div class="cam-ctrls">
+            <button class="btn-start" id="regStartBtn" onclick="startRegCamera()">
+              <i class="fa-solid fa-play"></i> Start Camera
+            </button>
+            <button class="btn-stop hidden" id="regStopBtn" onclick="stopRegCamera()">
+              <i class="fa-solid fa-stop"></i> Stop
+            </button>
+            <button class="btn-capture-main hidden" id="regCaptureBtn" onclick="captureRegPhoto()">
+              <i class="fa-solid fa-circle-dot"></i> Capture Photo
+            </button>
+          </div>
+
+          <!-- Captured photo preview -->
+          <div id="regPhotoPreview" class="hidden" style="padding:14px 16px;border-top:1px solid rgba(255,255,255,0.07)">
+            <p style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Captured Photo</p>
+            <img id="regCapturedImg" src="" alt="Captured"
+              style="width:70%;display:block;border-radius:10px;margin:0 auto;border:2px solid rgba(16,185,129,0.4);transform: scaleX(-1);">
+            <div style="display:flex;align-items:center;gap:7px;margin-top:10px;color:var(--green);font-size:0.82rem;font-weight:600">
+              <i class="fa-solid fa-circle-check"></i> Photo ready for registration
+            </div>
+            <button class="btn-stop" style="margin-top:10px;width:100%;justify-content:center" onclick="retakeRegPhoto()">
+              <i class="fa-solid fa-rotate-left"></i> Retake Photo
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- All Students -->
+    <section class="sec hidden" id="adm-students">
+      <div class="sec-hd">
+        <div>
+          <h2 class="sec-title">All Students</h2>
+          <p class="sec-sub" id="stuCountLabel">0 students registered</p>
+        </div>
+        <div style="display:flex;gap:9px">
+          <input class="fi" id="stuSearch" placeholder="Search by name or roll..." style="width:220px" oninput="renderStudentGrid()">
+          <button class="btn-primary" onclick="adminNav('register',document.querySelectorAll('#adminSidebar .nav-a')[2])">
+            <i class="fa-solid fa-plus"></i> Add New
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="students-grid" id="studentGrid"></div>
+      </div>
+    </section>
+    <!-- Student Detail Popup -->
+    <div class="tt-popup-wrap hidden" id="stuPopupWrap" onclick="closeStuPopup(event)">
+      
+      <div class="tt-popup" onclick="event.stopPropagation()">
+        <div class="tt-popup-btns">
+          <button class="btn-primary" id="editBtn" onclick="enableEdit()">
+            <i class="fa-solid fa-pen"></i> Edit
+          </button>
+
+          <button class="btn-primary" id="saveBtn" onclick="updateStudent()" disabled>
+            <i class="fa-solid fa-save"></i> Save
+          </button>
+        </div>
+        
+        <div class="tt-popup-title">Student Details</div>
+
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input class="form-input" id="stuDetName" disabled>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Roll</label>
+          <input class="form-input" id="stuDetRoll" disabled>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Class</label>
+          <input class="form-input" id="stuDetClass" disabled>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input class="form-input" id="stuDetPhone" disabled>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">DOB</label>
+          <input class="form-input" id="stuDetDob" disabled>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Parent</label>
+          <input class="form-input" id="stuDetParent" disabled>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Parent Contact</label>
+          <input class="form-input" id="stuParentPh" disabled>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Address</label>
+          <input class="form-input" id="stuDetAddr" disabled>
+        </div>
+
+        <div class="tt-popup-btns">
+          <button class="btn-secondary" onclick="closeStuPopup()">
+            <i class="fa-solid fa-xmark"></i> Close
+          </button>
+        </div>
+
+      </div>
+    </div>
+    <!-- Timetable -->
+    <section class="sec hidden" id="adm-timetable">
+      <div class="sec-hd">
+        <div>
+          <h2 class="sec-title">Timetable</h2>
+          <p class="sec-sub">Click any cell to edit</p>
+        </div>
+        <button class="btn-primary" onclick="saveTimetable()">
+          <i class="fa-solid fa-floppy-disk"></i> Save Timetable
+        </button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table class="tbl tt-table">
+            <thead id="ttHead"></thead>
+            <tbody id="ttBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Timetable edit popup -->
+    <div class="tt-popup-wrap hidden" id="ttPopupWrap" onclick="closeTTPopup(event)">
+      <div class="tt-popup" onclick="event.stopPropagation()">
+        <div class="tt-popup-title" id="ttPopupTitle"></div>
+        <div class="tt-popup-time" id="ttPopupTime"></div>
+        <div class="form-group" style="margin-top:8px">
+          <label class="form-label">Subject</label>
+          <input class="form-input" id="ttppSubj" placeholder="e.g. Mathematics">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Faculty</label>
+          <input class="form-input" id="ttppTeacher" placeholder="e.g. Dr. Sharma">
+        </div>
+        <div class="tt-popup-btns">
+          <button class="btn-primary" onclick="saveTTCell()">
+            <i class="fa-solid fa-check"></i> Save
+          </button>
+          <button class="btn-danger" onclick="freeTTCell()">
+            <i class="fa-solid fa-eraser"></i> Free
+          </button>
+          <button class="btn-secondary" onclick="closeTTPopup()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reports -->
+     <section class="sec hidden" id="adm-areports">
+      <div class="sec-hd">
+        <div>
+          <h2 class="sec-title">Student Attendance Summary</h2>
+          <p class="sec-sub">Overall attendance performance</p>
+        </div>
+      <button class="btn-primary" onclick="exportAdminCSV()">
+        <i class="fa-solid fa-download"></i> Export 
+      </button> 
+      </div>
+
+      <div class="card">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead id="admSubjHead"></thead>
+            <tbody id="admSummaryBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Timetable edit modal -->
+<div class="tt-edit-modal hidden" id="ttModal">
+  <div class="tt-edit-box">
+    <div class="modal-head">
+      <h2 id="ttModalTitle" style="font-family:'Segoe UI',sans-serif;font-size:1.2rem;font-weight:800">Add Period</h2>
+      <button class="modal-close" onclick="closeTTModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label class="form-label">Day *</label>
+        <select class="form-input" id="ttDay">
+          <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+          <option>Thursday</option><option>Friday</option><option>Saturday</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Period No *</label>
+        <input class="form-input" id="ttPeriodNo" type="number" min="1" max="9" placeholder="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Subject *</label>
+        <input class="form-input" id="ttSubject" placeholder="e.g. Mathematics">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Faculty</label>
+        <input class="form-input" id="ttTeacher" placeholder="e.g. Dr. Sharma">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Start Time *</label>
+        <input class="form-input" id="ttStart" type="time">
+      </div>
+      <div class="form-group">
+        <label class="form-label">End Time *</label>
+        <input class="form-input" id="ttEnd" type="time">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Class / Section</label>
+        <select class="form-input" id="ttClass">
+          <option value="">All</option>
+          <option>CS-A</option><option>CS-B</option><option>CS-C</option>
+          <option>ME-A</option><option>ME-B</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Room</label>
+        <input class="form-input" id="ttRoom" placeholder="e.g. Room 101">
+      </div>
+    </div>
+    <div style="display:flex;gap:9px;justify-content:flex-end;margin-top:18px">
+      <button class="btn-secondary" onclick="closeTTModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveTTPeriod()"><i class="fa-solid fa-check"></i> Save Period</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     TEACHER PAGE
+================================================================ -->
+<div id="teacherPage" class="page">
+  <aside class="sidebar" id="teacherSidebar">
+    <div class="sb-brand">
+      <div class="m-logo"><img src="logo2.png" alt="logo"></div><span class="sb-name">noProxy</span>
+      <span class="sb-role-chip chip-teacher">Faculty</span>
+    </div>
+    <p class="nav-lbl">Overview</p>
+    <a href="#" class="nav-a active" onclick="teacherNav('tdashboard',this)">
+      <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
+    </a>
+    <p class="nav-lbl">Records</p>
+    <!-- Teacher Sidebar — add this nav item -->
+    <a href="#" class="nav-a" onclick="teacherNav('tstudents',this)">
+      <i class="fa-solid fa-users"></i><span>Students</span>
+    </a>
+    <a href="#" class="nav-a" onclick="teacherNav('tperiodview',this)">
+      <i class="fa-solid fa-clock"></i><span>Period-wise View</span>
+    </a>
+    <p class="nav-lbl">Reports</p>
+    <a href="#" class="nav-a" onclick="teacherNav('tsummary',this)">
+      <i class="fa-solid fa-chart-pie"></i><span>Summary</span>
+    </a>
+    <div class="sb-footer">
+      <div class="sb-user">
+        <div class="sb-avatar"><i class="fa-solid fa-user"></i></div>
+        <div>
+          <div class="sb-uname">Faculty</div>
+          <div class="sb-urole">TEA001</div>
+        </div>
+        <button class="btn-logout" onclick="logout('teacher')" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
+      </div>
+    </div>
+  </aside>
+  <header class="topbar">
+    <button class="menu-btn" onclick="toggleSB('teacher')"><i class="fa-solid fa-bars"></i></button>
+    <span class="topbar-title">noProxy</span>
+    <span class="topbar-clock" id="teacherClock">--:--:--</span>
+    <button class="topbar-logout" onclick="logout('teacher')"><i class="fa-solid fa-right-from-bracket"></i></button>
+  </header>
+  <div class="sb-overlay hidden" id="teacherOverlay" onclick="toggleSB('teacher')"></div>
+
+  <main class="main">
+
+    <!-- Teacher Dashboard -->
+    <section class="sec active" id="tea-tdashboard">
+      <div class="sec-hd">
+        <div>
+          <h2 class="sec-title">Faculty Dashboard</h2>
+          <p class="sec-sub" id="teacherDate">—</p>
+        </div>
+        <div class="sec-hd-right">
+
+          <div style="font-family:'Consolas',monospace;font-size:0.9rem;color:var(--muted);background:var(--card);padding:9px 25px;border-radius:9px;border:1px solid var(--border)">
+            <i class="fa-regular fa-clock"></i>
+            <span id="teacherClockD">--:--:--</span>
+          </div>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card sc-blue">
+          <div class="stat-ico"><i class="fa-solid fa-users"></i></div>
+          <div><div class="stat-lbl">Total Students</div><div class="stat-val" id="teaTotalStu">0</div></div>
+        </div>
+        <div class="stat-card sc-green">
+          <div class="stat-ico"><i class="fa-solid fa-hourglass-half"></i></div>
+          <div><div class="stat-lbl">Current Period</div><div class="stat-val" id="teaCurrentPeriod">0</div></div>
+        </div>
+      </div>
+
+      <!-- Today's period summary -->
+      <div class="card">
+        <div class="card-hd"><h3><i class="fa-solid fa-calendar-check"></i>Today's Period Status</h3></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <div class="card-body" id="teaTodayPeriodStatus">
+              <!-- populated by JS -->
+            </div>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Teacher Students Section -->
+    <section class="sec hidden" id="tea-tstudents">
+      <div class="sec-hd">
+        <div>
+          <h2 class="sec-title">Students</h2>
+          <p class="sec-sub" id="teaStuCountLabel">0 students</p>
+        </div>
+        <input class="fi" id="teaStuSearch" placeholder="Search by name or roll..." style="width:220px" oninput="renderTeaStudentGrid()">
+      </div>
+      <div class="card">
+        <div class="students-grid" id="teaStudentGrid"></div>
+      </div>
+    </section>
+
+    <!-- Period-wise View -->
+    <section class="sec hidden" id="tea-tperiodview">
+      <div class="sec-hd">
+        <div><h2 class="sec-title">Period-wise View</h2><p class="sec-sub">See exactly who attended which period</p></div>
+      </div>
+      <div class="card filter-bar" style="margin-bottom:14px">
+      <div class="fg">
+        <label>Date</label>
+        <input class="fi" id="pvDate" type="date" onchange="renderPeriodView()">
+      </div>
+      <div class="fg">
+        <label>Period</label>
+        <select class="fi" id="pvPeriod" onchange="renderPeriodView()">
+          <option value="">All Periods</option>
+          <option value="1">Period 1</option>
+          <option value="2">Period 2</option>
+          <option value="3">Period 3</option>
+          <option value="4">Period 4</option>
+          <option value="5">Period 5</option>
+          <option value="6">Period 6</option>
+          <option value="7">Period 7</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Subject</label>
+        <select class="fi" id="pvSubject" onchange="renderPeriodView()">
+          <option value="">All Subjects</option>
+        </select>
+      </div>
+    </div>
+      <div id="pvCards" style="display:flex;flex-direction:column;gap:14px"></div>
+    </section>
+
+    <!-- Summary -->
+    <section class="sec hidden" id="tea-tsummary">
+      <div class="sec-hd">
+        <div><h2 class="sec-title">Attendance Summary</h2><p class="sec-sub">Student-wise attendance percentage</p></div>
+        <button class="btn-primary" onclick="exportAdminCSV()">
+        <i class="fa-solid fa-download"></i> Export 
+      </button> 
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead id="teaSubjHead"></thead>
+            <tbody id="teaSummaryBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+  <!-- Teacher Student Detail Popup -->
+  <div class="modal-overlay hidden" id="teaStuPopupWrap" onclick="closeTeaStuPopup(event)">
+    <div class="tea-stu-popup" onclick="event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="tea-stu-popup-hd">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div class="tea-stu-av" id="teaStuAv">A</div>
+          <div>
+            <div class="tea-stu-popup-name" id="teaStuPopupName">—</div>
+            <div class="tea-stu-popup-roll" id="teaStuPopupRoll">—</div>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeTeaStuPopup()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Two column body -->
+      <div class="tea-stu-popup-body">
+
+        <!-- LEFT: Student Details -->
+        <div class="tea-stu-col">
+          <div class="tea-stu-col-title">
+            <i class="fa-solid fa-id-card"></i> Student Details
+          </div>
+          <div class="tea-stu-details" id="teaStuDetails">
+            <!-- populated by JS -->
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="tea-stu-divider"></div>
+
+        <!-- RIGHT: Analytics -->
+        <div class="tea-stu-col">
+          <div class="tea-stu-col-title">
+            <i class="fa-solid fa-chart-pie"></i> Attendance Analytics
+          </div>
+          <div id="teaStuAnalytics">
+            <!-- populated by JS -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+<!-- Toast -->
+<div class="toast hidden" id="toast">
+  <i id="toastIco"></i><span id="toastMsg"></span>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
+</body>
+</html>
